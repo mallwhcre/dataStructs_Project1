@@ -17,7 +17,7 @@ void appendInArr(Record *rec, FILE *f); // seperates the timestamps & values
 int main()
 {
     FILE *rcs;
-    rcs = fopen("tempm.txt", "r");
+    rcs = fopen("test.txt", "r");
 
     if (rcs == NULL)
     {
@@ -33,16 +33,16 @@ void appendInArr(Record *rec, FILE *f)
     fgets(line, sizeof(line), f);
 
     int recIndex = 0; // index of record in the array
+    int linePos = sizeof(line);
+    // while (fgets(line, sizeof(line), f) != NULL && recIndex < MAX_ENTRIES)
+    //{
+    while(line[linePos]!='}')
+    {
 
-    while (fgets(line, sizeof(line), f) != NULL && recIndex < MAX_ENTRIES)
-    {   
-        
         char *content = line + 1; // Skip opening brace
 
-        // pair processing
-
-        strtok(content, ",");
-        // printf("%s \n", content);
+        // pair processing only first line
+        strtok(content, ","); // seperates pair
 
         char *openingQ = strchr(content, '"');
         char *closingQ = strchr(openingQ + 1, '"');
@@ -57,7 +57,7 @@ void appendInArr(Record *rec, FILE *f)
         closingQ = strchr(openingQ + 1, '"');
 
         sizeOf = closingQ - openingQ - 1;
-            
+
         char temp[5]; // holds the value
         strncpy(temp, openingQ + 1, sizeOf);
 
@@ -66,6 +66,10 @@ void appendInArr(Record *rec, FILE *f)
         printf("%s\n", rec[recIndex].timestamp);
         printf("%f\n", rec[recIndex].value);
 
-        recIndex++;
-    }
+        linePos=*closingQ+1;
+
+        // }
+    } 
+
+    recIndex++; // move to the next line
 }
