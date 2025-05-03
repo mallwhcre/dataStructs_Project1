@@ -11,65 +11,106 @@ typedef struct Record
     float value;
 } Record;
 
-Record records[MAX_ENTRIES];            // array that will hold the records
-void appendInArr(Record *rec, FILE *f); // seperates the timestamps & values
+
+void appendInArr(Record *rec, FILE *f); // appends recs and values in an array
+
+void MergeSort(Record *rec, int left, int right);
+void Merge(Record *rec, int left, int mid, int right);
+void QuickSort(Record *rec, int left, int right);
+
 
 int main()
-{
-    FILE *rcs;
-    rcs = fopen("test.txt", "r");
+{   
+    FILE *temps;
+    temps = fopen("tempm.txt", "r");
 
-    if (rcs == NULL)
+    if (temps == NULL)
     {
         printf("File couln't be opened");
         return 1;
     }
-    appendInArr(records, rcs);
+    Record tRecs[MAX_ENTRIES];            //temperature records
+    appendInArr(tRecs, temps);
+
+    FILE *hum;
+    hum = fopen("hum.txt", "r");
+
+    if (hum == NULL)
+    {
+        printf("File couln't be opened");
+        return 1;
+    }
+    Record hRecs[MAX_ENTRIES];            // humidity records
+    appendInArr(hRecs, hum);
 }
 
 void appendInArr(Record *rec, FILE *f)
 {
     char line[MAX_LINELEN];
-    fgets(line, sizeof(line), f);
+    int recIndex = 0; // record index
 
-    int recIndex = 0; // index of record in the array
-    int linePos = sizeof(line);
-    // while (fgets(line, sizeof(line), f) != NULL && recIndex < MAX_ENTRIES)
-    //{
-    while(line[linePos]!='}')
+
+    while (fgets(line, sizeof(line), f) != NULL && recIndex < MAX_ENTRIES)
     {
+        char *current_pos = line; // pos in the line
 
-        char *content = line + 1; // Skip opening brace
+        // find opening brace
+        while (*current_pos && *current_pos != '{')
+            current_pos++;
+        current_pos++; //skip brace
 
-        // pair processing only first line
-        strtok(content, ","); // seperates pair
+        while (*current_pos && *current_pos != '}')
+        {
+            if (*current_pos == '\0' || *current_pos == '}')
+                break;
 
-        char *openingQ = strchr(content, '"');
-        char *closingQ = strchr(openingQ + 1, '"');
+            // timestamp
+            char *openingQ = strchr(current_pos, '"');
+            if (!openingQ)
+                break;
 
-        int sizeOf = closingQ - openingQ - 1;
+            char *closingQ = strchr(openingQ + 1, '"');
+            if (!closingQ)
+                break;
 
-        strncpy(rec[recIndex].timestamp, openingQ + 1, sizeOf); // timestamp added
+            int sizeOf = closingQ - openingQ - 1;
 
-        char *colon = strchr(closingQ, ':');
+            strncpy(rec[recIndex].timestamp, openingQ + 1, sizeOf);
 
-        openingQ = strchr(colon, '"');
-        closingQ = strchr(openingQ + 1, '"');
+            rec[recIndex].timestamp[sizeOf] = '\0'; // null terminate the timestamp
 
-        sizeOf = closingQ - openingQ - 1;
+            // value
+            char *colon = strchr(closingQ, ':');
+            if (!colon)
+                break;
 
-        char temp[5]; // holds the value
-        strncpy(temp, openingQ + 1, sizeOf);
+            // Find value
+            openingQ = strchr(colon, '"');
+            if (!openingQ)
+                break;
 
-        rec[recIndex].value = atof(temp); // value is added
+            closingQ = strchr(openingQ + 1, '"');
+            if (!closingQ)
+                break;
 
-        printf("%s\n", rec[recIndex].timestamp);
-        printf("%f\n", rec[recIndex].value);
+            sizeOf = closingQ - openingQ - 1;
 
-        linePos=*closingQ+1;
+            char temp[5]; // holds the value
+            strncpy(temp, openingQ + 1, sizeOf);
+            temp[sizeOf] = '\0';
 
-        // }
-    } 
+            rec[recIndex].value = atof(temp);
 
-    recIndex++; // move to the next line
+            // printf("Record %d: %s = %f\n", recIndex, rec[recIndex].timestamp, rec[recIndex].value);
+
+            // Move to next pair
+            current_pos = closingQ + 1;
+            recIndex++;
+
+            if (recIndex >= MAX_ENTRIES)
+                break;
+        }
+    }
+
+    fclose(f);
 }
