@@ -22,14 +22,6 @@ void swap(Record *rec_a, Record *rec_b);
 
 int main()
 {
-
-    // Record rec_test[2] = {{"hello1", 5}, {"hello2", 4}};
-
-    // showRec(rec_test, 2);
-    // swap(&rec_test[0], &rec_test[1]);
-
-    // showRec(rec_test, 2);
-
     FILE *temps;
     temps = fopen("test.txt", "r");
     int rec_index_temp = 0;
@@ -79,22 +71,47 @@ void quickSort(Record *rec, int left, int right)
     if (left < right)
     {
 
-        int pivot = rec[left].value;
+        // int pivot = rec[left].value;
 
+        // int i = left - 1;
+        // for (int j = left; j <= right - 1; j++)
+        // {
+        //     if (rec[j].value < pivot)
+        //     {
+        //         i++;
+        //         swap(&rec[i], &rec[j]);
+        //     }
+        // }
+
+        // swap(&rec[i + 1], &rec[right]);
+
+        // quickSort(rec, left, i);
+        // quickSort(rec, i + 2, right);
+
+        int pivot = rec[left].value;
         int i = left - 1;
-        for (int j = left; j <= right - 1; j++)
+        int k = right + 1;
+
+        while (i <= k)
         {
-            if (rec[j].value < pivot)
+            do
             {
                 i++;
-                swap(&rec[i], &rec[j]);
+            } while (rec[i].value < pivot);
+
+            do
+            {
+                k--;
+            } while (rec[k].value > pivot);
+
+            if (k > i)
+            {
+                swap(&rec[k], &rec[i]);
             }
         }
 
-        swap(&rec[i + 1], &rec[right]);
-
-        quickSort(rec, left, i);
-        quickSort(rec, i + 2, right);
+        quickSort(rec, left, k);
+        quickSort(rec, k + 1, right);
     }
 }
 
