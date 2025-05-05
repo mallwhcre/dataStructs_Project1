@@ -11,8 +11,8 @@ typedef struct Record
     float value;
 } Record;
 
-void appendInArr(Record *rec, FILE *f); // appends recs and values in an array
-void showRec(Record *rec); 
+void appendInArr(Record *rec, FILE *f, int *recIndex); // appends recs and values in an array
+void showRec(Record *rec, int max_array);
 
 void MergeSort(Record *rec, int left, int right);
 void Merge(Record *rec, int left, int mid, int right);
@@ -22,23 +22,31 @@ void QuickSort(Record *rec, int left, int right);
 int main()
 {
     FILE *temps;
-    temps = fopen("test.txt", "r");
+    temps = fopen("tempm.txt", "r");
+    int rec_index_temp = 0;
+    int rec_index_hum = 0;
 
     if (temps == NULL)
     {
         printf("File couln't be opened");
         return 1;
     }
-    Record tRecs[MAX_ENTRIES]; // temperature records
-    appendInArr(tRecs, temps);
+    // Record tRecs[MAX_ENTRIES]; // temperature records
+
+    Record *tRecs = malloc(MAX_ENTRIES * sizeof(Record));
+    appendInArr(tRecs, temps, &rec_index_temp);
 
     printf("Unsorted temperature records:\n");
-    showRec(tRecs);
+    showRec(tRecs, rec_index_temp);
 
-    MergeSort(tRecs, 0, MAX_ENTRIES - 1); // sort temperature records
+    printf("Index is:%d\n", rec_index_temp);
+
+    MergeSort(tRecs, 0, rec_index_temp - 1); // sort temperature records
 
     printf("Sorted temperature records:\n");
-    showRec(tRecs);
+    showRec(tRecs, rec_index_temp);
+
+    printf("Index is:%d\n", rec_index_temp);
 
     FILE *hum;
     hum = fopen("hum.txt", "r");
@@ -49,18 +57,18 @@ int main()
         return 1;
     }
     Record hRecs[MAX_ENTRIES]; // humidity records
-    appendInArr(hRecs, hum);
-    MergeSort(hRecs, 0, MAX_ENTRIES - 1); // sort humidity records
+    appendInArr(hRecs, hum, &rec_index_hum);
+    MergeSort(hRecs, 0, rec_index_hum); // sort humidity records
 
-
+    free(tRecs);
+    return 0;
 }
 
-void appendInArr(Record *rec, FILE *f)
+void appendInArr(Record *rec, FILE *f, int *recIndex)
 {
     char line[MAX_LINELEN];
-    int recIndex = 0; // record index
 
-    while (fgets(line, sizeof(line), f) != NULL && recIndex < MAX_ENTRIES)
+    while (fgets(line, sizeof(line), f) != NULL && *recIndex < MAX_ENTRIES)
     {
         char *current_pos = line; // pos in the line
 
@@ -85,9 +93,9 @@ void appendInArr(Record *rec, FILE *f)
 
             int sizeOf = closingQ - openingQ - 1;
 
-            strncpy(rec[recIndex].timestamp, openingQ + 1, sizeOf);
+            strncpy(rec[*recIndex].timestamp, openingQ + 1, sizeOf);
 
-            rec[recIndex].timestamp[sizeOf] = '\0'; // null terminate the timestamp
+            rec[*recIndex].timestamp[sizeOf] = '\0'; // null terminate the timestamp
 
             // value
             char *colon = strchr(closingQ, ':');
@@ -109,13 +117,13 @@ void appendInArr(Record *rec, FILE *f)
             strncpy(temp, openingQ + 1, sizeOf);
             temp[sizeOf] = '\0';
 
-            rec[recIndex].value = atof(temp);
+            rec[*recIndex].value = atof(temp);
 
             // next pair
             current_pos = closingQ + 1;
-            recIndex++;
+            *recIndex += 1;
 
-            if (recIndex >= MAX_ENTRIES)
+            if (*recIndex >= MAX_ENTRIES)
                 break;
         }
     }
@@ -125,11 +133,12 @@ void appendInArr(Record *rec, FILE *f)
 
 void MergeSort(Record *rec, int left, int right)
 {
-
     if (left >= right)
+    {
         return;
+    }
 
-    int mid = (left + right) / 2;
+    int mid = left + (right - left) / 2;
 
     MergeSort(rec, left, mid);      // first half
     MergeSort(rec, mid + 1, right); // second half
@@ -139,55 +148,67 @@ void MergeSort(Record *rec, int left, int right)
 
 void Merge(Record *rec, int left, int mid, int right)
 {
+    int i, j, k;
+    int n1 = mid - left + 1;
+    int n2 = right - mid;
 
-    Record *temp = malloc((right - left + 1) * sizeof(Record));
+    Record *leftArr = malloc(n1 * sizeof(Record));
+    Record *rightArr = malloc(n2 * sizeof(Record));
 
-    if (!temp)
+    // Copy data to temporary arrays
+    for (i = 0; i < n1; i++)
     {
-        printf(" allocation failed\n");
-        exit(1);
+        leftArr[i] = rec[left + i];
+    }
+    for (j = 0; j < n2; j++)
+    {
+        rightArr[j] = rec[mid + 1 + j];
     }
 
-    int i = left;    // left subarray index
-    int j = mid + 1; // right subarray index
-    int k = 0;       // merged array index
-
-    while (i <= mid && j <= right)
+    // Merge the temporary arrays back into arr[left..right]
+    i = 0;
+    j = 0;
+    k = left;
+    while (i < n1 && j < n2)
     {
-        if (rec[i].value < rec[j].value)
+        if (leftArr[i].value <= rightArr[j].value)
         {
-            temp[k++] = rec[i++];
+            rec[k] = leftArr[i];
+            i++;
         }
         else
         {
-            temp[k++] = rec[j++];
+            rec[k] = rightArr[j];
+            j++;
         }
+        k++;
     }
 
-    while (i <= mid) // copy remaining elements from left subarray
+    // Copy the remaining elements of leftArr[], if any
+    while (i < n1)
     {
-        temp[k++] = rec[i++];
-    }
-    while (j <= right) // copy remaining elements from right subarray
-    {
-        temp[k++] = rec[j++];
-    }
-
-    for (i = left; i <= right; i++)
-    {
-        rec[i] = temp[i - left];
+        rec[k] = leftArr[i];
+        i++;
+        k++;
     }
 
-    free(temp);
+    // Copy the remaining elements of rightArr[], if any
+    while (j < n2)
+    {
+        rec[k] = rightArr[j];
+        j++;
+        k++;
+    }
+
+    free(leftArr);
+    free(rightArr);
 }
 
-void showRec(Record *rec)
+void showRec(Record *rec, int max_array)
 {
-    
-    for (int i = 0; i < MAX_ENTRIES; i++)
-    {   
-        if (!rec[i].value)
-            break; 
+
+    for (int i = 0; i < max_array; i++)
+    {
         printf("Record %d: %s = %f\n", i, rec[i].timestamp, rec[i].value);
     }
 }
