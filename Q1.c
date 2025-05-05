@@ -17,12 +17,21 @@ void showRec(Record *rec, int max_array);
 void MergeSort(Record *rec, int left, int right);
 void Merge(Record *rec, int left, int mid, int right);
 
-void QuickSort(Record *rec, int left, int right);
+void quickSort(Record *rec, int left, int right);
+void swap(Record *rec_a, Record *rec_b);
 
 int main()
 {
+
+    // Record rec_test[2] = {{"hello1", 5}, {"hello2", 4}};
+
+    // showRec(rec_test, 2);
+    // swap(&rec_test[0], &rec_test[1]);
+
+    // showRec(rec_test, 2);
+
     FILE *temps;
-    temps = fopen("tempm.txt", "r");
+    temps = fopen("test.txt", "r");
     int rec_index_temp = 0;
     int rec_index_hum = 0;
 
@@ -31,7 +40,6 @@ int main()
         printf("File couln't be opened");
         return 1;
     }
-    // Record tRecs[MAX_ENTRIES]; // temperature records
 
     Record *tRecs = malloc(MAX_ENTRIES * sizeof(Record));
     appendInArr(tRecs, temps, &rec_index_temp);
@@ -41,7 +49,8 @@ int main()
 
     printf("Index is:%d\n", rec_index_temp);
 
-    MergeSort(tRecs, 0, rec_index_temp - 1); // sort temperature records
+    // MergeSort(tRecs, 0, rec_index_temp - 1); // sort temperature records
+    quickSort(tRecs, 0, rec_index_temp - 1);
 
     printf("Sorted temperature records:\n");
     showRec(tRecs, rec_index_temp);
@@ -58,10 +67,42 @@ int main()
     }
     Record hRecs[MAX_ENTRIES]; // humidity records
     appendInArr(hRecs, hum, &rec_index_hum);
-    MergeSort(hRecs, 0, rec_index_hum); // sort humidity records
+    MergeSort(hRecs, 0, rec_index_hum - 1); // sort humidity records
 
     free(tRecs);
     return 0;
+}
+
+void quickSort(Record *rec, int left, int right)
+{
+
+    if (left < right)
+    {
+
+        int pivot = rec[left].value;
+
+        int i = left - 1;
+        for (int j = left; j <= right - 1; j++)
+        {
+            if (rec[j].value < pivot)
+            {
+                i++;
+                swap(&rec[i], &rec[j]);
+            }
+        }
+
+        swap(&rec[i + 1], &rec[right]);
+
+        quickSort(rec, left, i);
+        quickSort(rec, i + 2, right);
+    }
+}
+
+void swap(Record *rec_a, Record *rec_b)
+{
+    Record temp = *rec_a;
+    *rec_a = *rec_b;
+    *rec_b = temp;
 }
 
 void appendInArr(Record *rec, FILE *f, int *recIndex)
