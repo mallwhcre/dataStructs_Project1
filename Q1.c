@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_ENTRIES 50000
+#define MAX_ENTRIES 100000
 #define MAX_LINELEN 5000
 
 typedef struct Record
@@ -23,7 +23,7 @@ void swap(Record *rec_a, Record *rec_b);
 int main()
 {
     FILE *temps;
-    temps = fopen("test.txt", "r");
+    temps = fopen("tempm.txt", "r");
     int rec_index_temp = 0;
     int rec_index_hum = 0;
 
@@ -33,22 +33,6 @@ int main()
         return 1;
     }
 
-    Record *tRecs = malloc(MAX_ENTRIES * sizeof(Record));
-    appendInArr(tRecs, temps, &rec_index_temp);
-
-    printf("Unsorted temperature records:\n");
-    showRec(tRecs, rec_index_temp);
-
-    printf("Index is:%d\n", rec_index_temp);
-
-    // MergeSort(tRecs, 0, rec_index_temp - 1); // sort temperature records
-    quickSort(tRecs, 0, rec_index_temp - 1);
-
-    printf("Sorted temperature records:\n");
-    showRec(tRecs, rec_index_temp);
-
-    printf("Index is:%d\n", rec_index_temp);
-
     FILE *hum;
     hum = fopen("hum.txt", "r");
 
@@ -57,11 +41,55 @@ int main()
         printf("File couln't be opened");
         return 1;
     }
+
+    Record tRecs[MAX_ENTRIES];
+    appendInArr(tRecs, temps, &rec_index_temp);
     Record hRecs[MAX_ENTRIES]; // humidity records
     appendInArr(hRecs, hum, &rec_index_hum);
-    MergeSort(hRecs, 0, rec_index_hum - 1); // sort humidity records
 
-    free(tRecs);
+    printf("Choose sorting algorith\n0:Quicksort\t1:Mergesort\nChoice:");
+    int sort_alg;
+    scanf("%d", &sort_alg);
+
+    if (sort_alg == 1)
+    {
+        printf("==========Unsorted temperature records=========\n");
+        showRec(tRecs, rec_index_temp);
+
+        MergeSort(tRecs, 0, rec_index_temp - 1); 
+
+        printf("==========Sorted temperature records=========\n");
+        showRec(tRecs, rec_index_temp);
+
+        printf("==========Unsorted humidity records=========\n");
+        showRec(hRecs, rec_index_hum);
+
+        MergeSort(hRecs, 0, rec_index_hum - 1);
+
+        printf("==========Sorted humidity records=========\n");
+        showRec(hRecs, rec_index_hum);
+    }
+
+    else
+    {
+
+        printf("==========Unsorted temperature records=========\n");
+        showRec(tRecs, rec_index_temp);
+
+        quickSort(tRecs, 0, rec_index_temp - 1);
+
+        printf("==========Sorted temperature records=========\n");
+        showRec(tRecs, rec_index_temp);
+
+        printf("==========Unsorted humidity records=========\n");
+        showRec(hRecs, rec_index_hum);
+
+        quickSort(hRecs, 0, rec_index_hum - 1);
+
+        printf("==========Sorted humidity records=========\n");
+        showRec(hRecs, rec_index_hum);
+    }
+
     return 0;
 }
 
@@ -71,28 +99,11 @@ void quickSort(Record *rec, int left, int right)
     if (left < right)
     {
 
-        // int pivot = rec[left].value;
-
-        // int i = left - 1;
-        // for (int j = left; j <= right - 1; j++)
-        // {
-        //     if (rec[j].value < pivot)
-        //     {
-        //         i++;
-        //         swap(&rec[i], &rec[j]);
-        //     }
-        // }
-
-        // swap(&rec[i + 1], &rec[right]);
-
-        // quickSort(rec, left, i);
-        // quickSort(rec, i + 2, right);
-
         int pivot = rec[left].value;
         int i = left - 1;
         int k = right + 1;
 
-        while (i <= k)
+        while (1)
         {
             do
             {
@@ -104,10 +115,12 @@ void quickSort(Record *rec, int left, int right)
                 k--;
             } while (rec[k].value > pivot);
 
-            if (k > i)
+            if (i >= k)
             {
-                swap(&rec[k], &rec[i]);
+                break;
             }
+
+            swap(&rec[k], &rec[i]);
         }
 
         quickSort(rec, left, k);
