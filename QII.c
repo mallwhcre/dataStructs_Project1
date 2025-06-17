@@ -93,7 +93,7 @@ int max(int a, int b)
 void binaryInterpolationSearch(Record *rec, int left, int right, int key)
 {
     int size = right - left + 1;
-    int next_val = (size * (key - rec[left].value)/ (rec[right].value - rec[left].value));
+    int next_val =  (size * (key - rec[left].value)/ (rec[right].value - rec[left].value));
 
     printf("next va is %d\n", next_val);
 
@@ -102,7 +102,15 @@ void binaryInterpolationSearch(Record *rec, int left, int right, int key)
         int i = 0;
         if (size <= 3)
         {
-            // direct seaerching
+            int j=0;
+            for (j; j<size; j++)
+            {
+                if (key == rec[j].value)
+                {
+                    printf("Record Found: %s = %f\n", rec[left + j].timestamp, rec[left + j].value);
+                    return;
+                }
+            }
         }
 
         if (key >= rec[next_val].value)
