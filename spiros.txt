@@ -1,0 +1,36 @@
+int BIS(int key, int A[], int n) {
+    if (n == 0) return -1;
+    if (A[0] == key) return 0;
+
+    // Exponential phase to find the range
+    int i = 1;
+    while (i < n && A[i] <= key) {
+        i *= 2; // Exponentially increase the index
+    }
+
+    int low = i / 2;
+    int high = (i < n) ? i : n - 1;
+
+    // Interpolation search within the found range
+    while (A[high] >= key && key > A[low]) {
+        // Avoid division by zero by checking A[high] != A[low]
+        if (A[high] == A[low]) break;
+
+        int next = low + ((double)(key - A[low]) / (A[high] - A[low])) * (high - low);
+        
+        // Ensure next is within bounds
+        if (next < low || next > high) break;
+
+        if (A[next] < key) {
+            low = next + 1;
+        } else if (A[next] > key) {
+            high = next - 1;
+        } else {
+            return next;
+        }
+    }
+
+    // Check if key is found
+    if (A[low] == key) return low;
+    return -1;
+}
